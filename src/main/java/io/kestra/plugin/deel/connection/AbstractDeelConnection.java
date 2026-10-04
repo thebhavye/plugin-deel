@@ -160,19 +160,28 @@ public abstract class AbstractDeelConnection {
     }
 
     private Exception handleErrorResponse(HttpClientException e) {
-        String message = e.getMessage();
+        int statusCode = extractStatusCode(e);
 
-        if (message != null && message.contains("HTTP 401")) {
+        if (statusCode == 401) {
             return new IllegalStateException("Authentication failed (401): Invalid or expired API token", e);
-        } else if (message != null && message.contains("HTTP 403")) {
+        } else if (statusCode == 403) {
             return new IllegalStateException("Access forbidden (403): Token may not have required scopes or permissions", e);
-        } else if (message != null && message.contains("HTTP 429")) {
+        } else if (statusCode == 429) {
             return new IllegalStateException("Rate limited (429): Too many requests. Implement backoff.", e);
-        } else if (message != null && (message.contains("HTTP 500") || message.contains("HTTP 502") || message.contains("HTTP 503") || message.contains("HTTP 504"))) {
-            return new IllegalStateException("Server error: " + message, e);
+        } else if (statusCode >= 500 && statusCode <= 599) {
+            return new IllegalStateException("Server error: " + e.getMessage(), e);
         }
 
-        return new IllegalStateException(message, e);
+        return new IllegalStateException(e.getMessage(), e);
+    }
+
+    private static int extractStatusCode(HttpClientException e) {
+        if (e instanceof HttpClientResponseException responseException
+            && responseException.getResponse() != null
+            && responseException.getResponse().getStatus() != null) {
+            return responseException.getResponse().getStatus().getCode();
+        }
+        return 0;
     }
 
     }

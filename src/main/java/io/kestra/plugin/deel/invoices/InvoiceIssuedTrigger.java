@@ -23,7 +23,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -108,7 +108,7 @@ public class InvoiceIssuedTrigger extends AbstractDeelTrigger implements Polling
             .thenComparing(DeelInvoice::getId, Comparator.nullsFirst(String::compareTo)));
 
         List<String> seen = new ArrayList<>(state.getSeen());
-        Set<String> seenSet = new HashSet<>(seen);
+        Set<String> seenSet = new LinkedHashSet<>(seen);
         String watermark = state.getWatermark();
         List<Map<String, Object>> pending = new ArrayList<>(state.getPending());
 
@@ -149,7 +149,7 @@ public class InvoiceIssuedTrigger extends AbstractDeelTrigger implements Polling
         }
 
         List<Map<String, Object>> deduped = new ArrayList<>();
-        Set<String> seenKeys = new HashSet<>();
+        Set<String> seenKeys = new LinkedHashSet<>();
         for (Map<String, Object> event : pending) {
             String key = event.get("event") + "|" + event.get("id");
             if (seenKeys.add(key)) {

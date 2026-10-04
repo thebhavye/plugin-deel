@@ -246,4 +246,45 @@ class ContractsListTest extends AbstractDeelTest {
         assertThat(MockDeelController.queryParameters.get("status"), is("active"));
         assertThat(MockDeelController.queryParameters.get("contract_type"), is("open"));
     }
+
+    @Test
+    void testListContractsStoreUsesIon() throws Exception {
+        String response = """
+            {
+                "data": [
+                    {
+                        "id": "1",
+                        "title": "Contract A",
+                        "contract_type": "open",
+                        "status": "active"
+                    }
+                ],
+                "page": {
+                    "offset": 0,
+                    "total_rows": 1,
+                    "items_per_page": 25,
+                    "cursor": "next-cursor"
+                }
+            }
+            """;
+
+        MockDeelController.stubResponse(response);
+
+        RunContextFactory factory = applicationContext.getBean(RunContextFactory.class);
+        RunContext runContext = factory.of();
+
+        ContractsList task = ContractsList.builder()
+            .apiToken(io.kestra.core.models.property.Property.ofValue("test-token"))
+            .baseUrl(io.kestra.core.models.property.Property.ofValue("http://localhost:" + embeddedServer.getPort() + "/mock"))
+            .fetchType(io.kestra.core.models.property.Property.ofValue(FetchType.STORE))
+            .build();
+
+        ContractsList.Output output = task.run(runContext);
+
+        assertThat(output.getSize(), is(1));
+        assertThat(output.getTotal(), is(1L));
+        assertThat(output.getNextCursor(), is("next-cursor"));
+        assertThat(output.getUri(), notNullValue());
+        assertThat(output.getUri().toString(), containsString(".ion"));
+    }
 }

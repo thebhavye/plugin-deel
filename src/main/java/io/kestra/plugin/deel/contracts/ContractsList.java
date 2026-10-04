@@ -6,17 +6,13 @@ import io.kestra.core.models.annotations.Plugin;
 import io.kestra.core.models.annotations.PluginProperty;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.RunnableTask;
-import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 import io.kestra.plugin.deel.connection.AbstractDeelConnection;
 import io.kestra.plugin.deel.model.DeelPage;
 import io.kestra.plugin.deel.model.DeelContract;
 import io.kestra.plugin.deel.model.DeelPagination;
 import io.kestra.core.models.tasks.common.FetchType;
-import io.kestra.core.runners.RunContext;
-import io.kestra.core.serializers.JacksonMapper;
-import io.kestra.core.storages.kv.KVMetadata;
-import io.kestra.core.storages.kv.KVStore;
+import io.kestra.core.serializers.FileSerde;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,13 +20,14 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.slf4j.Logger;
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 @SuperBuilder
 @Getter
@@ -200,9 +197,11 @@ public class ContractsList extends AbstractDeelConnection implements RunnableTas
                 .nextCursor(nextCursor)
                 .build();
             case STORE -> {
-                File tempFile = runContext.workingDir().createTempFile(".json").toFile();
-                try (java.io.FileWriter writer = new java.io.FileWriter(tempFile)) {
-                    JacksonMapper.ofJson().writeValue(writer, mapped);
+                File tempFile = runContext.workingDir().createTempFile(".ion").toFile();
+                try (BufferedOutputStream output = new BufferedOutputStream(new FileOutputStream(tempFile), FileSerde.BUFFER_SIZE)) {
+                    for (Map<String, Object> item : mapped) {
+                        FileSerde.write(output, item);
+                    }
                 }
                 URI uri = runContext.storage().putFile(tempFile);
                 yield Output.builder()

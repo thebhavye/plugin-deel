@@ -23,6 +23,7 @@ public class MockDeelController {
     public static boolean binaryRequested;
     public static Map<String, String> headers = new HashMap<>();
     public static Map<String, String> queryParameters = new HashMap<>();
+    public static java.util.Queue<String> responseQueue = new java.util.ArrayDeque<>();
 
     private void capture(HttpRequest<?> request) {
         headers = new HashMap<>();
@@ -32,10 +33,17 @@ public class MockDeelController {
     }
 
     private HttpResponse<?> respond() {
-        String responseData = data;
         Integer status = errorStatus;
         // NOTE: errorStatus is intentionally sticky (not cleared) so that
         // client retries (e.g. on HTTP 429) keep receiving the error status.
+        if (!responseQueue.isEmpty()) {
+            String queued = responseQueue.poll();
+            if (status != null) {
+                return HttpResponse.status(io.micronaut.http.HttpStatus.valueOf(status), queued);
+            }
+            return HttpResponse.ok(queued);
+        }
+        String responseData = data;
         data = null;
         if (status != null) {
             return HttpResponse.status(io.micronaut.http.HttpStatus.valueOf(status), responseData);
@@ -185,6 +193,9 @@ public class MockDeelController {
         if (content == null) {
             return HttpResponse.notFound();
         }
+        if (name != null && name.endsWith(".pdf")) {
+            return HttpResponse.ok(content).contentType(MediaType.APPLICATION_PDF);
+        }
         return HttpResponse.ok(content).contentType(MediaType.APPLICATION_OCTET_STREAM);
     }
 
@@ -195,11 +206,22 @@ public class MockDeelController {
         binaryRequested = false;
         headers.clear();
         queryParameters.clear();
+        responseQueue.clear();
     }
 
     public static void stubResponse(String body) {
         data = body;
         errorStatus = null;
+        responseQueue.clear();
+    }
+
+    public static void stubSequentialResponses(String... bodies) {
+        responseQueue.clear();
+        data = null;
+        errorStatus = null;
+        for (String body : bodies) {
+            responseQueue.add(body);
+        }
     }
 
     public static void stubBinary(byte[] content) {

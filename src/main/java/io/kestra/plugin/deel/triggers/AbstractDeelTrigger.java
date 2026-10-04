@@ -6,6 +6,7 @@ import io.kestra.core.http.HttpRequest;
 import io.kestra.core.http.HttpResponse;
 import io.kestra.core.http.client.HttpClient;
 import io.kestra.core.http.client.HttpClientException;
+import io.kestra.core.http.client.HttpClientResponseException;
 import io.kestra.core.http.client.configurations.BearerAuthConfiguration;
 import io.kestra.core.http.client.configurations.HttpConfiguration;
 import io.kestra.core.models.annotations.PluginProperty;
@@ -209,39 +210,16 @@ public abstract class AbstractDeelTrigger extends AbstractTrigger {
     }
 
     private static int extractStatusCode(HttpClientException e) {
-        String message = e.getMessage();
-        if (message != null) {
-            // Extract HTTP status code from Kestra's exception message format:
-            // "Failed http request with response code '401' and body: ..."
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("HTTP (\\d+)");
-            java.util.regex.Matcher matcher = pattern.matcher(message);
-            if (matcher.find()) {
-                try {
-                    return Integer.parseInt(matcher.group(1));
-                } catch (Exception ignored) {
-                    // fall through
-                }
-            }
+        if (e instanceof HttpClientResponseException responseException
+            && responseException.getResponse() != null
+            && responseException.getResponse().getStatus() != null) {
+            return responseException.getResponse().getStatus().getCode();
         }
         return 0;
     }
 
     private static String extractMessage(HttpClientException e) {
-        String message = e.getMessage();
-        if (message != null) {
-            // Try to extract the status code from Kestra's exception message format:
-            // "Failed http request with response code '401' and body: ..."
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("Failed http request with response code '(\\d+)'");
-            java.util.regex.Matcher matcher = pattern.matcher(message);
-            if (matcher.find()) {
-                try {
-                    return "HTTP " + matcher.group(1);
-                } catch (Exception ignored) {
-                    // fall through
-                }
-            }
-        }
-        return message;
+        return e.getMessage();
     }
 
     /**

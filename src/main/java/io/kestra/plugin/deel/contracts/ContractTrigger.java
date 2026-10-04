@@ -117,32 +117,32 @@ public class ContractTrigger extends AbstractDeelTrigger implements PollingTrigg
         List<String> terminated = runContext.render(this.terminatedStatuses).asList(String.class);
 
         List<DeelContract> allContracts = new ArrayList<>();
-        int offset = 0;
         int limit = 100;
+        String afterCursor = null;
         boolean hasMore = true;
 
         while (hasMore) {
             Map<String, Object> params = new HashMap<>();
             params.put("limit", limit);
-            params.put("offset", offset);
             if (state.getWatermark() != null) {
                 params.put("updated_since", state.getWatermark());
             }
-
-            DeelPage<DeelContract> page = request(runContext, "/contracts", "GET", params, CONTRACTS_PAGE_TYPE_REF);
-            List<DeelContract> pageData = page != null && page.getData() != null ? page.getData() : new ArrayList<>();
-            allContracts.addAll(pageData);
-
-            // Check if there are more pages
-            if (page.getPage() != null && page.getPage().getTotalRows() != null) {
-                int totalRows = page.getPage().getTotalRows().intValue();
-                hasMore = allContracts.size() < totalRows;
-            } else {
-                // If no total_rows, assume one page
-                hasMore = false;
+            if (afterCursor != null && !afterCursor.isBlank()) {
+                params.put("after_cursor", afterCursor);
             }
 
-            offset += limit;
+            DeelPage<DeelContract> page = request(runContext, "/contracts", "GET", params, CONTRACTS_PAGE_TYPE_REF);
+            if (page == null || page.getData() == null || page.getData().isEmpty()) {
+                break;
+            }
+            allContracts.addAll(page.getData());
+
+            String nextCursor = page.getPage() != null ? page.getPage().getCursor() : null;
+            if (nextCursor == null || nextCursor.isBlank()) {
+                hasMore = false;
+            } else {
+                afterCursor = nextCursor;
+            }
         }
 
         List<DeelContract> contracts = allContracts;

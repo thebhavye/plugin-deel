@@ -64,6 +64,7 @@ class DocumentsDownloadTest extends AbstractDeelTest {
         assertThat(output.getContractId(), is(CONTRACT_ID));
         assertThat(output.getDocumentId(), is(DOCUMENT_ID));
         assertThat(output.getSize(), is((long) pdfContent.length));
+        assertThat(output.getUri().toString(), containsString(".pdf"));
 
         byte[] stored = runContext.storage().getFile(output.getUri()).readAllBytes();
         assertThat(stored, is(pdfContent));
@@ -92,7 +93,7 @@ class DocumentsDownloadTest extends AbstractDeelTest {
         RunContext runContext = factory.of();
 
         Exception e = assertThrows(Exception.class, () -> buildTask().run(runContext));
-        assertThat(e.getMessage(), containsString("401"));
+        assertThat(e.getMessage(), containsString("Authentication failed"));
     }
 
     @Test
@@ -103,6 +104,15 @@ class DocumentsDownloadTest extends AbstractDeelTest {
         RunContext runContext = factory.of();
 
         Exception e = assertThrows(Exception.class, () -> buildTask().run(runContext));
-        assertThat(e.getMessage(), containsString("403"));
+        assertThat(e.getMessage(), containsString("Access forbidden"));
+    }
+
+    @Test
+    void testExtensionForContentType() {
+        assertThat(Download.extensionForContentType("application/pdf"), is("pdf"));
+        assertThat(Download.extensionForContentType("application/pdf; charset=utf-8"), is("pdf"));
+        assertThat(Download.extensionForContentType("application/octet-stream"), is("bin"));
+        assertThat(Download.extensionForContentType(null), is("bin"));
+        assertThat(Download.extensionForContentType("application/unknown-type"), is("bin"));
     }
 }

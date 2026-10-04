@@ -50,10 +50,10 @@ class ContractTriggerTest extends AbstractDeelTriggerTest {
                 "title": "Contract %s",
                 "contract_type": "open",
                 "status": "%s",
-                "created_at": "2024-01-01T00:00:00Z",
+                "created_at": "%s",
                 "updated_at": "%s"
             }
-            """.formatted(id, id, status, updatedAt);
+            """.formatted(id, id, status, updatedAt, updatedAt);
     }
 
     @SuppressWarnings("unchecked")
@@ -195,7 +195,7 @@ class ContractTriggerTest extends AbstractDeelTriggerTest {
 
         Exception e = assertThrows(Exception.class,
             () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("contract-flow", "contract-401")));
-        assertThat(e.getMessage(), containsString("401"));
+        assertThat(e.getMessage(), containsString("Authentication failed"));
     }
 
     @Test
@@ -206,6 +206,72 @@ class ContractTriggerTest extends AbstractDeelTriggerTest {
 
         Exception e = assertThrows(Exception.class,
             () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("contract-flow", "contract-403")));
-        assertThat(e.getMessage(), containsString("403"));
+        assertThat(e.getMessage(), containsString("Access forbidden"));
+    }
+
+    @Test
+    void testRateLimited() {
+        MockDeelController.stubError(429, "Too Many Requests");
+
+        ContractTrigger trigger = buildTrigger();
+
+        Exception e = assertThrows(Exception.class,
+            () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("contract-flow", "contract-429")));
+        assertThat(e.getMessage(), containsString("Rate limited"));
+    }
+
+    @Test
+    void testServerError() {
+        MockDeelController.stubError(500, "Internal Server Error");
+
+        ContractTrigger trigger = buildTrigger();
+
+        Exception e = assertThrows(Exception.class,
+            () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("contract-flow", "contract-500")));
+        assertThat(e.getMessage(), containsString("Server error"));
+    }
+
+    @Test
+    void testCursorPaginationAggregatesAllPages() throws Exception {
+        String pageOne = """
+            {
+                "data": [%s],
+                "page": {"cursor": "cursor-page-2", "total_rows": 2}
+            }
+            """.formatted(contract("c1", "new", "2024-06-01T00:00:00Z"));
+        String pageTwo = """
+            {
+                "data": [%s],
+                "page": {"cursor": null, "total_rows": 2}
+            }
+            """.formatted(contract("c2", "new", "2024-07-01T00:00:00Z"));
+        MockDeelController.stubSequentialResponses(pageOne, pageTwo);
+
+        ContractTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("contract-flow", "contract-cursor");
+
+        // Baseline consumes both pages without emitting.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+
+        String pageOneAgain = """
+            {
+                "data": [%s],
+                "page": {"cursor": "cursor-page-2", "total_rows": 3}
+            }
+            """.formatted(contract("c1", "new", "2024-06-01T00:00:00Z"));
+        String pageTwoWithNew = """
+            {
+                "data": [%s,%s],
+                "page": {"cursor": null, "total_rows": 3}
+            }
+            """.formatted(
+                contract("c2", "new", "2024-07-01T00:00:00Z"),
+                contract("c3", "new", "2024-08-01T00:00:00Z"));
+        MockDeelController.stubSequentialResponses(pageOneAgain, pageTwoWithNew);
+
+        Optional<Execution> execution = trigger.evaluate(conditionContext(runContext), context);
+        assertThat(execution.isPresent(), is(true));
+        assertThat(((Map<String, Object>) variablesOf(execution.get()).get("contract")).get("id"), is("c3"));
     }
 }

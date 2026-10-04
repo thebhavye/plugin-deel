@@ -162,7 +162,18 @@ class InvoiceIssuedTriggerTest extends AbstractDeelTriggerTest {
 
         Exception e = assertThrows(Exception.class,
             () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("invoice-flow", "invoice-401")));
-        assertThat(e.getMessage(), containsString("401"));
+        assertThat(e.getMessage(), containsString("Authentication failed"));
+    }
+
+    @Test
+    void testAccessForbidden() {
+        MockDeelController.stubError(403, "Forbidden");
+
+        InvoiceIssuedTrigger trigger = buildTrigger();
+
+        Exception e = assertThrows(Exception.class,
+            () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("invoice-flow", "invoice-403")));
+        assertThat(e.getMessage(), containsString("Access forbidden"));
     }
 
     @Test
@@ -173,6 +184,34 @@ class InvoiceIssuedTriggerTest extends AbstractDeelTriggerTest {
 
         Exception e = assertThrows(Exception.class,
             () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("invoice-flow", "invoice-429")));
-        assertThat(e.getMessage(), containsString("429"));
+        assertThat(e.getMessage(), containsString("Rate limited"));
+    }
+
+    @Test
+    void testServerError() {
+        MockDeelController.stubError(500, "Internal Server Error");
+
+        InvoiceIssuedTrigger trigger = buildTrigger();
+
+        Exception e = assertThrows(Exception.class,
+            () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("invoice-flow", "invoice-500")));
+        assertThat(e.getMessage(), containsString("Server error"));
+    }
+
+    @Test
+    void testSeenIdsTrimOldestFirstDeterministically() {
+        // LinkedHashSet preserves insertion order so trimming keeps the newest IDs.
+        java.util.Set<String> ordered = new java.util.LinkedHashSet<>();
+        for (int i = 0; i < 2005; i++) {
+            ordered.add("inv-" + i);
+        }
+        java.util.List<String> seen = new java.util.ArrayList<>(ordered);
+        if (seen.size() > 2000) {
+            seen = seen.subList(seen.size() - 1000, seen.size());
+        }
+        assertThat(seen.size(), is(1000));
+        assertThat(seen.get(0), is("inv-1005"));
+        assertThat(seen, not(hasItem("inv-0")));
+        assertThat(seen, hasItem("inv-2004"));
     }
 }

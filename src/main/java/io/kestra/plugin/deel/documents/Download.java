@@ -96,13 +96,11 @@ public class Download extends AbstractDeelConnection implements RunnableTask<Dow
         String downloadUrl = response.getData().getUrl();
         logger.debug("Downloading document {} for contract {}", renderedDocumentId, renderedContractId);
 
-        // Use document ID as basis for filename, with generic extension
-        // The API may return different file types, so we use a generic approach
-        String fileName = "contract-" + renderedDocumentId.replace("-", "").substring(0, 8);
-        String fileExtension = "bin";
+        String baseName = "contract-" + renderedDocumentId.replace("-", "");
+        baseName = baseName.substring(0, Math.min(baseName.length(), 16));
 
-        File tempFile = runContext.workingDir().createTempFile(fileName + "." + fileExtension).toFile();
-        Path tempPath = tempFile.toPath();
+        File stagingFile = runContext.workingDir().createTempFile(".tmp").toFile();
+        Path stagingPath = stagingFile.toPath();
 
         try {
             // Download the file content using a streaming approach directly to a temp file
@@ -118,14 +116,24 @@ public class Download extends AbstractDeelConnection implements RunnableTask<Dow
 
             HttpResponse<Path> httpResponse = client.send(
                 httpRequest,
-                HttpResponse.BodyHandlers.ofFile(tempPath)
+                HttpResponse.BodyHandlers.ofFile(stagingPath)
             );
 
             if (httpResponse.statusCode() < 200 || httpResponse.statusCode() >= 300) {
                 throw new IllegalStateException("Document download failed with HTTP " + httpResponse.statusCode());
             }
 
-            long size = httpResponse.body().toFile().length();
+            String contentType = httpResponse.headers().firstValue("Content-Type").orElse(null);
+            String fileExtension = extensionForContentType(contentType);
+
+            File tempFile = stagingFile;
+            if (!stagingFile.getName().endsWith("." + fileExtension)) {
+                File renamed = new File(stagingFile.getParentFile(), baseName + "." + fileExtension);
+                Files.move(stagingPath, renamed.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                tempFile = renamed;
+            }
+
+            long size = tempFile.length();
             URI uri = runContext.storage().putFile(tempFile);
 
             return Output.builder()
@@ -136,11 +144,29 @@ public class Download extends AbstractDeelConnection implements RunnableTask<Dow
                 .build();
         } catch (Exception e) {
             // Clean up temp file on failure
-            if (tempFile.exists()) {
-                tempFile.delete();
+            if (stagingFile.exists()) {
+                stagingFile.delete();
             }
             throw e;
         }
+    }
+
+    static String extensionForContentType(String contentType) {
+        if (contentType == null) {
+            return "bin";
+        }
+        String mime = contentType.split(";")[0].trim().toLowerCase();
+        return switch (mime) {
+            case "application/pdf" -> "pdf";
+            case "application/json" -> "json";
+            case "text/csv" -> "csv";
+            case "text/plain" -> "txt";
+            case "application/xml", "text/xml" -> "xml";
+            case "application/zip" -> "zip";
+            case "image/png" -> "png";
+            case "image/jpeg" -> "jpg";
+            default -> "bin";
+        };
     }
 
     @Builder
