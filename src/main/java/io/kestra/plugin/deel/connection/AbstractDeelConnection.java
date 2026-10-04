@@ -9,10 +9,10 @@ import io.kestra.core.http.client.HttpClientResponseException;
 import io.kestra.core.http.client.configurations.BearerAuthConfiguration;
 import io.kestra.core.http.client.configurations.HttpConfiguration;
 import io.kestra.core.models.property.Property;
+import io.kestra.core.models.tasks.Task;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,7 +37,7 @@ import java.util.function.Function;
 @EqualsAndHashCode
 @Getter
 @NoArgsConstructor
-public abstract class AbstractDeelConnection {
+public abstract class AbstractDeelConnection extends Task {
 
     public static final String DEFAULT_BASE_URL = "https://api.letsdeel.com/rest";
     public static final String DEFAULT_API_VERSION = "2026-01-01";
@@ -58,7 +58,6 @@ public abstract class AbstractDeelConnection {
     @PluginProperty(group = "connection", secret = true)
     @ToString.Exclude
     @NotNull
-    @NotBlank
     private Property<String> apiToken;
 
     @Schema(

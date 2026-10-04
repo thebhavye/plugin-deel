@@ -85,7 +85,14 @@ public class InvoiceIssuedTrigger extends AbstractDeelTrigger implements Polling
             params.put("offset", offset);
 
             DeelPage<DeelInvoice> page = request(runContext, "/invoices", "GET", params, INVOICES_PAGE_TYPE_REF);
-            List<DeelInvoice> pageData = page != null && page.getData() != null ? page.getData() : new ArrayList<>();
+            List<DeelInvoice> pageData =
+                page != null && page.getData() != null
+                    ? page.getData()
+                    : new ArrayList<>();
+
+            if (pageData.isEmpty()) {
+                break;
+            }
             allInvoices.addAll(pageData);
 
             // Check if there are more pages
@@ -140,9 +147,6 @@ public class InvoiceIssuedTrigger extends AbstractDeelTrigger implements Polling
         }
 
         seen = new ArrayList<>(seenSet);
-        if (seen.size() > 2000) {
-            seen = seen.subList(seen.size() - 1000, seen.size());
-        }
 
         if (baseline && watermark == null) {
             watermark = java.time.Instant.now().toString();
@@ -185,7 +189,7 @@ public class InvoiceIssuedTrigger extends AbstractDeelTrigger implements Polling
         @SuppressWarnings("unchecked")
         Map<String, Object> firstInvoice = (Map<String, Object>) firstEmitted.get("record");
 
-        return Optional.of(buildExecution(runContext, context, Output.builder()
+        return Optional.of(buildExecution(conditionContext, context, Output.builder()
             .invoice(firstInvoice)
             .events(deduped)
             .build()));

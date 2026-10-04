@@ -50,7 +50,7 @@ public class PeopleGet extends AbstractDeelConnection implements RunnableTask<Pe
         title = "Person ID",
         description = "Deel person ID (UUID from List People)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> personId;
 
     // TypeReference for DeelPerson to preserve generic type information

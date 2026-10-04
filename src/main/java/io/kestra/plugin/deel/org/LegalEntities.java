@@ -74,7 +74,7 @@ public class LegalEntities extends AbstractDeelConnection implements RunnableTas
         title = "Maximum number of legal entities per page",
         description = "The number of results to return per page. Default is 100."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(100);
 
@@ -82,42 +82,42 @@ public class LegalEntities extends AbstractDeelConnection implements RunnableTas
         title = "Cursor for pagination",
         description = "Cursor for pagination, as returned by a previous response."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> cursor;
 
     @Schema(
         title = "Filter by country",
         description = "Filter by country."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> country;
 
     @Schema(
         title = "Filter by entity type",
         description = "Filter by entity type."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> entityType;
 
     @Schema(
         title = "Filter by legal entity ID",
         description = "Filter by specific legal entity ID."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> legalEntityId;
 
     @Schema(
         title = "Filter by global payroll flag",
         description = "Filter by global payroll flag."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<Boolean> globalPayroll;
 
     @Schema(
         title = "Include archived legal entities",
         description = "Whether to include archived legal entities in the results."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<Boolean> includeArchived;
 
     @Schema(

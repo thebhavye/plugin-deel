@@ -10,13 +10,13 @@ import io.kestra.core.http.client.HttpClientResponseException;
 import io.kestra.core.http.client.configurations.BearerAuthConfiguration;
 import io.kestra.core.http.client.configurations.HttpConfiguration;
 import io.kestra.core.models.annotations.PluginProperty;
+import io.kestra.core.models.conditions.ConditionContext;
 import io.kestra.core.models.executions.Execution;
-import io.kestra.core.models.executions.ExecutionTrigger;
-import io.kestra.core.models.flows.State;
 import io.kestra.core.models.property.Property;
 import io.kestra.core.models.tasks.Output;
 import io.kestra.core.models.triggers.AbstractTrigger;
 import io.kestra.core.models.triggers.TriggerContext;
+import io.kestra.core.models.triggers.TriggerService;
 import io.kestra.core.runners.RunContext;
 import io.kestra.core.serializers.JacksonMapper;
 import io.kestra.core.storages.kv.KVMetadata;
@@ -281,22 +281,8 @@ public abstract class AbstractDeelTrigger extends AbstractTrigger {
         );
     }
 
-    protected Execution buildExecution(RunContext runContext, TriggerContext context, Output output) {
-        String executionId;
-        try {
-            executionId = runContext.getTriggerExecutionId();
-        } catch (IllegalStateException e) {
-            // Only reachable outside the scheduler (e.g., unit tests), where the
-            // trigger execution id is not initialized. Production evaluations always define it.
-            executionId = io.kestra.core.utils.IdUtils.create();
-        }
-        return Execution.builder()
-            .id(executionId)
-            .namespace(context.getNamespace())
-            .flowId(context.getFlowId())
-            .state(new State())
-            .trigger(ExecutionTrigger.of(this, output))
-            .build();
+    protected Execution buildExecution(ConditionContext conditionContext, TriggerContext context, Output output) {
+        return TriggerService.generateExecution(this, conditionContext, context, output);
     }
 
     /**

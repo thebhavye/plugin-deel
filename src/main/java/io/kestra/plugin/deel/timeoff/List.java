@@ -76,7 +76,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "HRIS profile ID",
         description = "Worker HRIS profile id identifying the profile whose time-off requests are returned."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @NotNull
     private Property<String> hrisProfileId;
 
@@ -84,35 +84,35 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Filter by status",
         description = "Time off status (REQUESTED, APPROVED, REJECTED, USED, CANCELED)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> status;
 
     @Schema(
         title = "Filter by start date",
         description = "Start date of time off."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> startDate;
 
     @Schema(
         title = "Filter by end date",
         description = "End date of time off."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> endDate;
 
     @Schema(
         title = "Page size",
         description = "Number of time-off requests to return per page."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<Integer> pageSize;
 
     @Schema(
         title = "Next page cursor",
         description = "Cursor for the next page, as returned by a previous response."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> next;
 
     @Schema(

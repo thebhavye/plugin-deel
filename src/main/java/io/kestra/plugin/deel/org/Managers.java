@@ -60,7 +60,7 @@ public class Managers extends AbstractDeelConnection implements RunnableTask<Man
         title = "Maximum number of managers per page",
         description = "The number of records to return in the response."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(25);
 
@@ -68,7 +68,7 @@ public class Managers extends AbstractDeelConnection implements RunnableTask<Man
         title = "Offset for pagination",
         description = "The offset or starting point for pagination. Default is 0."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> offset = Property.ofValue(0);
 

@@ -1,0 +1,5 @@
+group: io.kestra.plugin.deel.lookups
+name: "lookups"
+title: "Deel Lookups"
+description: "Deel reference data tasks"
+body: ""

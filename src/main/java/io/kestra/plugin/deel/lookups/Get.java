@@ -70,21 +70,21 @@ public class Get extends AbstractDeelConnection implements RunnableTask<Get.Outp
         title = "Lookup type",
         description = "Reference data to retrieve. Each type calls its own documented endpoint."
     )
-    @PluginProperty
+    @PluginProperty(group = "main")
     private Property<LookupType> lookupType;
 
     @Schema(
         title = "EOR contract flag",
         description = "Applies only to SENIORITIES. When true, C-level seniorities are excluded. Defaults to true."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<Boolean> isEorContract;
 
     @Schema(
         title = "Cursor for pagination",
         description = "Applies only to JOB_TITLES, which paginates via after_cursor."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> afterCursor;
 
     public enum LookupType {

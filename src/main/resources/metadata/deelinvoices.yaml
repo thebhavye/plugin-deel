@@ -1,0 +1,5 @@
+group: io.kestra.plugin.deel.deelinvoices
+name: "deelinvoices"
+title: "Deel Invoices"
+description: "Deel invoices tasks"
+body: ""

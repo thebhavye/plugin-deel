@@ -50,7 +50,7 @@ public class ContractsGet extends AbstractDeelConnection implements RunnableTask
         title = "Contract ID",
         description = "Deel contract ID (UUID from List Contracts)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> contractId;
 
     // TypeReference for DeelContract to preserve generic type information

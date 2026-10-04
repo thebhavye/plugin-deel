@@ -60,7 +60,7 @@ public class Download extends AbstractDeelConnection implements RunnableTask<Dow
         title = "Contract ID",
         description = "The unique identifier of the EOR employee contract."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @NotNull
     private Property<String> contractId;
 
@@ -68,7 +68,7 @@ public class Download extends AbstractDeelConnection implements RunnableTask<Dow
         title = "Document ID",
         description = "The unique identifier of the document to download."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @NotNull
     private Property<String> documentId;
 

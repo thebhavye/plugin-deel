@@ -234,7 +234,7 @@ public class ContractTrigger extends AbstractDeelTrigger implements PollingTrigg
             ? (String) firstEmitted.get("previousStatus")
             : null;
 
-        return Optional.of(buildExecution(runContext, context, Output.builder()
+        return Optional.of(buildExecution(conditionContext, context, Output.builder()
             .event(firstEvent)
             .contract(firstContract)
             .previousStatus(firstPreviousStatus)

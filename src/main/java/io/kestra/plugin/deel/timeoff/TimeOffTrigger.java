@@ -222,7 +222,7 @@ public class TimeOffTrigger extends AbstractDeelTrigger implements PollingTrigge
         String firstEvent = (String) firstEmitted.get("event");
         String firstId = (String) firstEmitted.get("id");
 
-        return Optional.of(buildExecution(runContext, context, Output.builder()
+        return Optional.of(buildExecution(conditionContext, context, Output.builder()
             .event(firstEvent)
             .timeOff(firstTimeOff)
             .events(deduped)

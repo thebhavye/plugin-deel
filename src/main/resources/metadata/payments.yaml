@@ -1,0 +1,5 @@
+group: io.kestra.plugin.deel.payments
+name: "payments"
+title: "Deel Payments"
+description: "Deel payment tasks"
+body: ""

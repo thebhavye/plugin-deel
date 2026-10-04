@@ -1,0 +1,5 @@
+group: io.kestra.plugin.deel.timesheets
+name: "timesheets"
+title: "Deel Timesheets"
+description: "Deel timesheet tasks"
+body: ""

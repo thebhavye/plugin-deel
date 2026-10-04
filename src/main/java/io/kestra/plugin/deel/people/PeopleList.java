@@ -78,7 +78,7 @@ public class PeopleList extends AbstractDeelConnection implements RunnableTask<P
         title = "Maximum number of people per page",
         description = "Number of people to return per page (max 100). Default is 25."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(25);
 
@@ -86,7 +86,7 @@ public class PeopleList extends AbstractDeelConnection implements RunnableTask<P
         title = "Offset for pagination",
         description = "Index of the first record to return. Default is 0."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> offset = Property.ofValue(0);
 
@@ -94,35 +94,35 @@ public class PeopleList extends AbstractDeelConnection implements RunnableTask<P
         title = "Filter by hiring status",
         description = "Filter people by hiring status (e.g., active, onboarding, offboarding, inactive)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> hiringStatus;
 
     @Schema(
         title = "Filter by hiring type",
         description = "Filter people by hiring type (e.g., employee, contractor, eor)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> hiringType;
 
     @Schema(
         title = "Filter by legal entity ID",
         description = "Filter people by legal entity ID."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> legalEntityId;
 
     @Schema(
         title = "Search term",
         description = "Search people by name, email, or other fields."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> search;
 
     @Schema(
         title = "Filter by updated since",
         description = "Filter people updated since the given timestamp (ISO 8601 format)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> updatedSince;
 
     @Schema(

@@ -76,7 +76,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Maximum number of timesheets per page",
         description = "Maximum number of records to return per page."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(25);
 
@@ -84,7 +84,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Offset for pagination",
         description = "Number of records to skip before starting to return results. Default is 0."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> offset = Property.ofValue(0);
 
@@ -92,28 +92,28 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Filter by contract ID",
         description = "Filter results to timesheets belonging to this Deel contract ID."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> contractId;
 
     @Schema(
         title = "Filter by status",
         description = "Filter results to timesheets with the specified status (approved, declined, not_payable, paid, pending, processing)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> status;
 
     @Schema(
         title = "Filter by submission start date",
         description = "Filter results to timesheets submitted on or after this date (YYYY-MM-DD)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> dateFrom;
 
     @Schema(
         title = "Filter by submission end date",
         description = "Filter results to timesheets submitted before this date (YYYY-MM-DD)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> dateTo;
 
     @Schema(

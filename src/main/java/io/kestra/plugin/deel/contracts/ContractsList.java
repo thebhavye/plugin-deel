@@ -75,7 +75,7 @@ public class ContractsList extends AbstractDeelConnection implements RunnableTas
         title = "Maximum number of contracts per page",
         description = "Number of contracts to return per page (max 100). Default is 25."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(25);
 
@@ -83,42 +83,42 @@ public class ContractsList extends AbstractDeelConnection implements RunnableTas
         title = "Cursor for pagination",
         description = "Cursor for the next page (cursor-based pagination)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> afterCursor;
 
     @Schema(
         title = "Filter by contract type",
         description = "Filter contracts by type (e.g., open, terminated, expired)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> contractType;
 
     @Schema(
         title = "Filter by status",
         description = "Filter contracts by status (e.g., active, terminated)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> status;
 
     @Schema(
         title = "Filter by legal entity ID",
         description = "Filter contracts by legal entity ID."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> legalEntityId;
 
     @Schema(
         title = "Filter by team ID",
         description = "Filter contracts by team ID."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> teamId;
 
     @Schema(
         title = "Filter by updated since",
         description = "Filter contracts updated since the given timestamp (ISO 8601 format)."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> updatedSince;
 
     @Schema(

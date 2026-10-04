@@ -47,15 +47,30 @@ public abstract class AbstractDeelTriggerTest extends AbstractDeelTest {
     }
 
     protected RunContext runContext(RunContextFactory factory, AbstractTrigger trigger) {
-        return factory.of(triggerFlow, trigger);
+        RunContext runContext = factory.of(triggerFlow, trigger);
+        // Scheduler initialization, as done by the real scheduler before polling:
+        // defines the trigger execution id required by TriggerService.generateExecution.
+        factory.initializer().forScheduler(
+            (io.kestra.core.runners.DefaultRunContext) runContext,
+            TriggerContext.builder()
+                .tenantId(TenantService.MAIN_TENANT)
+                .namespace(NAMESPACE)
+                .flowId(triggerFlow.getId())
+                .triggerId(trigger.getId())
+                .date(ZonedDateTime.now())
+                .build(),
+            trigger
+        );
+        return runContext;
     }
 
     protected ConditionContext conditionContext(RunContext runContext) {
-        return new ConditionContext(null, null, runContext, Map.of(), null);
+        return new ConditionContext(triggerFlow, null, runContext, Map.of(), null);
     }
 
     protected TriggerContext triggerContext(String flowId, String triggerId) {
         return TriggerContext.builder()
+            .tenantId(TenantService.MAIN_TENANT)
             .namespace(NAMESPACE)
             .flowId(flowId)
             .triggerId(triggerId)

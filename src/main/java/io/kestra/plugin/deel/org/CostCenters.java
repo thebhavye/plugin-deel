@@ -58,7 +58,7 @@ public class CostCenters extends AbstractDeelConnection implements RunnableTask<
         title = "Legal entity ID",
         description = "Legal entity id whose cost centers are returned."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> legalEntityId;
 
     @Schema(

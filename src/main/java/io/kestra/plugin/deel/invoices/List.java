@@ -76,7 +76,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Maximum number of invoices per page",
         description = "Number of invoices to return per page. Default is 25."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(25);
 
@@ -84,7 +84,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Offset for pagination",
         description = "Index of the first record to return. Default is 0."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> offset = Property.ofValue(0);
 
@@ -92,35 +92,35 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Cursor for pagination",
         description = "Return the next page of results after the given cursor."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> cursor;
 
     @Schema(
         title = "Filter by status",
         description = "By default only paid invoices are returned. Use 'all' to return invoices in all statuses."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> status;
 
     @Schema(
         title = "Filter by contract ID",
         description = "Filter invoices by related contract ID."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> contractId;
 
     @Schema(
         title = "Filter by issued-from date",
         description = "Filter invoices issued on or after the specified date."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> issuedFrom;
 
     @Schema(
         title = "Filter by issued-to date",
         description = "Filter invoices issued before the specified date."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> issuedTo;
 
     @Schema(

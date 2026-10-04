@@ -206,7 +206,7 @@ public class PersonTrigger extends AbstractDeelTrigger implements PollingTrigger
             ? (String) firstEmitted.get("previousStatus")
             : null;
 
-        return Optional.of(buildExecution(runContext, context, Output.builder()
+        return Optional.of(buildExecution(conditionContext, context, Output.builder()
             .event(firstEvent)
             .person(firstPerson)
             .previousStatus(firstPreviousStatus)

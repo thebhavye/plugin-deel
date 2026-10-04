@@ -59,7 +59,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Maximum number of invoices per page",
         description = "Number of invoices to return per page."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(25);
 
@@ -67,7 +67,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Offset for pagination",
         description = "Index of the first record to return. Default is 0."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> offset = Property.ofValue(0);
 

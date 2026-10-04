@@ -53,7 +53,7 @@ public class GetStatement extends AbstractDeelConnection implements RunnableTask
         title = "Payment statement ID",
         description = "Unique identifier of the payment statement to retrieve."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @NotNull
     private Property<String> paymentStatementId;
 

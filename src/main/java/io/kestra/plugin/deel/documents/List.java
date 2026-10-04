@@ -58,14 +58,14 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Contract ID",
         description = "The unique identifier of the EOR employee contract."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> contractId;
 
     @Schema(
         title = "Maximum number of documents per page",
         description = "Number of items to return per page. Maximum is 100, default is 20."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     @Builder.Default
     private Property<Integer> limit = Property.ofValue(20);
 
@@ -73,7 +73,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         title = "Cursor for pagination",
         description = "Cursor for pagination. Use the cursor from the previous response to get the next page of results."
     )
-    @PluginProperty(group = "filter")
+    @PluginProperty(group = "main")
     private Property<String> cursor;
 
     @Schema(

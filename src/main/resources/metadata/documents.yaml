@@ -1,0 +1,5 @@
+group: io.kestra.plugin.deel.documents
+name: "documents"
+title: "Deel Documents"
+description: "Deel HRX document tasks"
+body: ""

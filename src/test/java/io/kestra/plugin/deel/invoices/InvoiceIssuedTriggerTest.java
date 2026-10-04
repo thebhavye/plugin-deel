@@ -199,19 +199,115 @@ class InvoiceIssuedTriggerTest extends AbstractDeelTriggerTest {
     }
 
     @Test
-    void testSeenIdsTrimOldestFirstDeterministically() {
-        // LinkedHashSet preserves insertion order so trimming keeps the newest IDs.
-        java.util.Set<String> ordered = new java.util.LinkedHashSet<>();
-        for (int i = 0; i < 2005; i++) {
-            ordered.add("inv-" + i);
+    void testSeenIdsRetainedBeyondOldCapWithoutReEmit() throws Exception {
+        // Regression test: the trigger polls the full invoice list every time, so
+        // seen IDs must never be trimmed. With the old 2000->1000 cap, 2105 invoices
+        // produced ~1105 duplicate events on the next poll. Now the second poll
+        // must be silent.
+        String bigPage = invoicesPage(generateInvoices(2105, "2024-06-01T00:00:00Z"), 2105);
+        MockDeelController.stubResponse(bigPage);
+
+        InvoiceIssuedTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("invoice-flow", "invoice-no-trim");
+
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+
+        MockDeelController.stubResponse(bigPage);
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
+
+    @Test
+    @org.junit.jupiter.api.Timeout(60)
+    void testEmptyPageTerminatesLoopSafely() throws Exception {
+        // Regression test: if the API reports more total rows than it returns, an
+        // empty page must terminate pagination instead of looping indefinitely.
+        // The second page below claims total_rows=250 but carries no data.
+        String partialPage = """
+            {
+                "data": [%s,%s],
+                "page": {"offset": 0, "total_rows": 250, "items_per_page": 100}
+            }
+            """.formatted(invoice("inv1", "2024-06-01T00:00:00Z"), invoice("inv2", "2024-06-01T00:00:00Z"));
+        String emptyPage = """
+            {
+                "data": [],
+                "page": {"offset": 100, "total_rows": 250, "items_per_page": 100}
+            }
+            """;
+        MockDeelController.stubSequentialResponses(partialPage, emptyPage);
+
+        InvoiceIssuedTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("invoice-flow", "invoice-empty-page");
+
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
+
+    @Test
+    void testNullPageTerminatesLoopSafely() throws Exception {
+        MockDeelController.stubResponse("null");
+
+        InvoiceIssuedTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("invoice-flow", "invoice-null-page");
+
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
+
+    @Test
+    void testMultiPagePaginationAggregates() throws Exception {
+        String pageOne = """
+            {
+                "data": [%s],
+                "page": {"offset": 0, "total_rows": 2, "items_per_page": 100}
+            }
+            """.formatted(invoice("inv1", "2024-06-01T00:00:00Z"));
+        String pageTwo = """
+            {
+                "data": [%s],
+                "page": {"offset": 100, "total_rows": 2, "items_per_page": 100}
+            }
+            """.formatted(invoice("inv2", "2024-07-01T00:00:00Z"));
+        MockDeelController.stubSequentialResponses(pageOne, pageTwo);
+
+        InvoiceIssuedTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("invoice-flow", "invoice-multi-page");
+
+        // Baseline consumes both pages without emitting.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+
+        String pageTwoWithNew = """
+            {
+                "data": [%s,%s],
+                "page": {"offset": 100, "total_rows": 3, "items_per_page": 100}
+            }
+            """.formatted(invoice("inv2", "2024-07-01T00:00:00Z"), invoice("inv3", "2024-08-01T00:00:00Z"));
+        MockDeelController.stubSequentialResponses(pageOne, pageTwoWithNew);
+
+        Optional<Execution> execution = trigger.evaluate(conditionContext(runContext), context);
+        assertThat(execution.isPresent(), is(true));
+        assertThat(((Map<String, Object>) variablesOf(execution.get()).get("invoice")).get("id"), is("inv3"));
+    }
+
+    private String generateInvoices(int count, String issuedAt) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < count; i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(invoice("bulk-" + i, issuedAt));
         }
-        java.util.List<String> seen = new java.util.ArrayList<>(ordered);
-        if (seen.size() > 2000) {
-            seen = seen.subList(seen.size() - 1000, seen.size());
-        }
-        assertThat(seen.size(), is(1000));
-        assertThat(seen.get(0), is("inv-1005"));
-        assertThat(seen, not(hasItem("inv-0")));
-        assertThat(seen, hasItem("inv-2004"));
+        return sb.toString();
+    }
+
+    private String invoicesPage(String invoicesJson, int totalRows) {
+        return """
+            {
+                "data": [%s],
+                "page": {"offset": 0, "total_rows": %d, "items_per_page": 100}
+            }
+            """.formatted(invoicesJson, totalRows);
     }
 }

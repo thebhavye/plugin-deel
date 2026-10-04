@@ -1,0 +1,5 @@
+group: io.kestra.plugin.deel.org
+name: "org"
+title: "Deel Organization"
+description: "Deel organization tasks"
+body: ""
