@@ -15,6 +15,7 @@ import io.kestra.plugin.deel.model.DeelListResponse;
 import io.kestra.plugin.deel.model.DeelPage;
 import io.kestra.plugin.deel.model.DeelSeniority;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -71,6 +72,7 @@ public class Get extends AbstractDeelConnection implements RunnableTask<Get.Outp
         description = "Reference data to retrieve. Each type calls its own documented endpoint."
     )
     @PluginProperty(group = "main")
+    @NotNull
     private Property<LookupType> lookupType;
 
     @Schema(
