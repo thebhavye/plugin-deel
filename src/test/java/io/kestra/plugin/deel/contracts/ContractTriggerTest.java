@@ -232,6 +232,17 @@ class ContractTriggerTest extends AbstractDeelTriggerTest {
     }
 
     @Test
+    void testNotFound() {
+        MockDeelController.stubError(404, "Not Found");
+
+        ContractTrigger trigger = buildTrigger();
+
+        Exception e = assertThrows(Exception.class,
+            () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("contract-flow", "contract-404")));
+        assertThat(e.getMessage(), containsString("Not found (404)"));
+    }
+
+    @Test
     void testCursorPaginationAggregatesAllPages() throws Exception {
         String pageOne = """
             {

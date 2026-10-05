@@ -75,8 +75,9 @@ class WebhookTriggerTest extends AbstractDeelTest {
         }
 
         @Override
-        public void startExecution(Execution execution) {
+        public reactor.core.publisher.Mono<io.kestra.core.async.AsyncOperationProcessedEvent> startExecution(Execution execution) {
             executionStarted = true;
+            return reactor.core.publisher.Mono.empty();
         }
     }
 
@@ -102,7 +103,7 @@ class WebhookTriggerTest extends AbstractDeelTest {
             body,
             headers
         );
-        return new WebhookContext(request, "/webhooks/deel", null, trigger, service);
+        return new WebhookContext(request, "/webhooks/deel", null, trigger, service, null, null);
     }
 
     private RunContext runContext() {
@@ -121,6 +122,9 @@ class WebhookTriggerTest extends AbstractDeelTest {
 
         assertThat(response.getStatus().getCode(), is(200));
         assertThat(service.executionStarted, is(true));
+        // The HTTP response is chained after the execution is accepted and carries its id.
+        assertThat(response.getBody(), instanceOf(Map.class));
+        assertThat(((Map<?, ?>) response.getBody()).get("id"), is("test-execution"));
         assertThat(service.capturedOutput, instanceOf(WebhookTrigger.Output.class));
 
         WebhookTrigger.Output output = (WebhookTrigger.Output) service.capturedOutput;
@@ -222,7 +226,7 @@ class WebhookTriggerTest extends AbstractDeelTest {
             parsedBody,
             Map.of(WebhookTrigger.SIGNATURE_HEADER, List.of(signature))
         );
-        WebhookContext context = new WebhookContext(request, "/webhooks/deel", null, trigger, service);
+        WebhookContext context = new WebhookContext(request, "/webhooks/deel", null, trigger, service, null, null);
 
         HttpResponse<?> response = trigger.evaluate(context).block();
 

@@ -23,6 +23,7 @@ public class MockDeelController {
     public static boolean binaryRequested;
     public static Map<String, String> headers = new HashMap<>();
     public static Map<String, String> queryParameters = new HashMap<>();
+    public static java.util.List<Integer> requestedOffsets = new java.util.ArrayList<>();
     public static java.util.Queue<String> responseQueue = new java.util.ArrayDeque<>();
 
     private void capture(HttpRequest<?> request) {
@@ -30,6 +31,13 @@ public class MockDeelController {
         request.getHeaders().forEach((name, values) -> headers.put(name.toLowerCase(), String.join(",", values)));
         queryParameters = new HashMap<>();
         request.getParameters().forEach((name, values) -> queryParameters.put(name, values.getFirst()));
+        String offset = queryParameters.get("offset");
+        if (offset != null) {
+            try {
+                requestedOffsets.add(Integer.parseInt(offset));
+            } catch (NumberFormatException ignored) {
+            }
+        }
     }
 
     private HttpResponse<?> respond() {
@@ -206,6 +214,7 @@ public class MockDeelController {
         binaryRequested = false;
         headers.clear();
         queryParameters.clear();
+        requestedOffsets.clear();
         responseQueue.clear();
     }
 

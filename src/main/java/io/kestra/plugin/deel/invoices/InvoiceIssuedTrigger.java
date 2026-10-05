@@ -104,7 +104,7 @@ public class InvoiceIssuedTrigger extends AbstractDeelTrigger implements Polling
                 hasMore = false;
             }
 
-            offset += 100;
+            offset += pageData.size();
         }
 
         List<DeelInvoice> invoices = allInvoices;

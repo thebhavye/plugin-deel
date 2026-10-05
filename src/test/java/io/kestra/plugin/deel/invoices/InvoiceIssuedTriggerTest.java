@@ -291,6 +291,24 @@ class InvoiceIssuedTriggerTest extends AbstractDeelTriggerTest {
         assertThat(((Map<String, Object>) variablesOf(execution.get()).get("invoice")).get("id"), is("inv3"));
     }
 
+    @Test
+    void testPartialPageAdvancesByPageSize() throws Exception {
+        // A page may hold fewer than `limit` items without being the last page:
+        // the next offset must advance by the received page size, not by 100.
+        String pageOne = invoicesPage(
+            String.join(",", invoice("inv1", "2024-06-01T00:00:00Z"), invoice("inv2", "2024-06-01T00:00:00Z")), 3);
+        String pageTwo = invoicesPage(invoice("inv3", "2024-07-01T00:00:00Z"), 3);
+        MockDeelController.stubSequentialResponses(pageOne, pageTwo);
+
+        InvoiceIssuedTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("invoice-flow", "invoice-partial-page");
+
+        // Baseline aggregates both pages without emitting.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+        assertThat(MockDeelController.requestedOffsets, is(java.util.List.of(0, 2)));
+    }
+
     private String generateInvoices(int count, String issuedAt) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < count; i++) {

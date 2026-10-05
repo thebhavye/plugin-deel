@@ -139,9 +139,10 @@ public class WebhookTrigger extends AbstractWebhookTrigger implements TriggerOut
             return Mono.just(HttpResponse.of(HttpResponse.Status.OK, Map.of("ignored", true)));
         }
 
-        context.webhookService().startExecution(execution.get());
-        logger.debug("Triggering on Deel webhook event '{}'", eventType);
-        return Mono.just(HttpResponse.of(HttpResponse.Status.OK, Map.of("id", execution.get().getId())));
+        return context.webhookService()
+            .startExecution(execution.get())
+            .doOnSuccess(ignored -> logger.debug("Triggering on Deel webhook event '{}'", eventType))
+            .thenReturn(HttpResponse.of(HttpResponse.Status.OK, Map.of("id", execution.get().getId())));
     }
 
     /**

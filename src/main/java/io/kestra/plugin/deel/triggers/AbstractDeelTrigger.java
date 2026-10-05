@@ -202,6 +202,8 @@ public abstract class AbstractDeelTrigger extends AbstractTrigger {
             return new IllegalStateException("Access forbidden (403): Token may not have required scopes or permissions", e);
         } else if (statusCode == 429) {
             return new IllegalStateException("Rate limited (429): Too many requests. Implement backoff.", e);
+        } else if (statusCode == 404) {
+            return new IllegalStateException("Not found (404): the requested Deel resource does not exist or is not visible to this token", e);
         } else if (statusCode >= 500 && statusCode <= 599) {
             return new IllegalStateException("Server error: " + e.getMessage(), e);
         }

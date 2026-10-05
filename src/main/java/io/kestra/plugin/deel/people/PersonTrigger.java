@@ -104,7 +104,14 @@ public class PersonTrigger extends AbstractDeelTrigger implements PollingTrigger
             }
 
             DeelPage<DeelPerson> page = request(runContext, "/v2/people", "GET", params, PEOPLE_PAGE_TYPE_REF);
-            List<DeelPerson> pageData = page != null && page.getData() != null ? page.getData() : new ArrayList<>();
+            List<DeelPerson> pageData =
+                page != null && page.getData() != null
+                    ? page.getData()
+                    : new ArrayList<>();
+
+            if (pageData.isEmpty()) {
+                break;
+            }
             allPeople.addAll(pageData);
 
             // Check if there are more pages
@@ -117,7 +124,7 @@ public class PersonTrigger extends AbstractDeelTrigger implements PollingTrigger
                 hasMore = false;
             }
 
-            offset += limit;
+            offset += pageData.size();
         }
 
         List<DeelPerson> people = allPeople;

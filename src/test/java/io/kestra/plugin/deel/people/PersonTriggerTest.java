@@ -43,6 +43,15 @@ class PersonTriggerTest extends AbstractDeelTriggerTest {
             """.formatted(String.join(",", people), people.length);
     }
 
+    private String peoplePageWithTotal(String peopleJson, int totalRows) {
+        return """
+            {
+                "data": [%s],
+                "page": {"offset": 0, "total_rows": %d, "items_per_page": 100}
+            }
+            """.formatted(peopleJson, totalRows);
+    }
+
     private String person(String id, String status, String updatedAt) {
         return """
             {
@@ -210,7 +219,7 @@ class PersonTriggerTest extends AbstractDeelTriggerTest {
 
         Exception e = assertThrows(Exception.class,
             () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("person-flow", "person-401")));
-        assertThat(e.getMessage(), containsString("401"));
+        assertThat(e.getMessage(), containsString("Authentication failed"));
     }
 
     @Test
@@ -221,6 +230,91 @@ class PersonTriggerTest extends AbstractDeelTriggerTest {
 
         Exception e = assertThrows(Exception.class,
             () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("person-flow", "person-429")));
-        assertThat(e.getMessage(), containsString("429"));
+        assertThat(e.getMessage(), containsString("Rate limited"));
+    }
+
+    @Test
+    void testNotFound() {
+        MockDeelController.stubError(404, "Not Found");
+
+        PersonTrigger trigger = buildTrigger();
+
+        Exception e = assertThrows(Exception.class,
+            () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("person-flow", "person-404")));
+        assertThat(e.getMessage(), containsString("Not found (404)"));
+    }
+
+    @Test
+    void testNullPageTerminatesLoopSafely() throws Exception {
+        MockDeelController.stubResponse("null");
+
+        PersonTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("person-flow", "person-null-page");
+
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
+
+    @Test
+    @org.junit.jupiter.api.Timeout(60)
+    void testEmptyPageTerminatesLoopSafely() throws Exception {
+        // The API reports more total rows than it returns; the empty second page
+        // must terminate pagination instead of looping indefinitely.
+        String partialPage = peoplePageWithTotal(
+            String.join(",", person("p1", "active", "2024-06-01T00:00:00Z"), person("p2", "active", "2024-06-01T00:00:00Z")),
+            250);
+        String emptyPage = """
+            {
+                "data": [],
+                "page": {"offset": 2, "total_rows": 250, "items_per_page": 100}
+            }
+            """;
+        MockDeelController.stubSequentialResponses(partialPage, emptyPage);
+
+        PersonTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("person-flow", "person-empty-page");
+
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
+
+    @Test
+    void testPartialPageAdvancesByPageSize() throws Exception {
+        // A page may hold fewer than `limit` items without being the last page:
+        // the next offset must advance by the received page size, not by limit.
+        String pageOne = peoplePageWithTotal(
+            String.join(",", person("p1", "active", "2024-06-01T00:00:00Z"), person("p2", "active", "2024-06-01T00:00:00Z")),
+            3);
+        String pageTwo = peoplePageWithTotal(person("p3", "active", "2024-07-01T00:00:00Z"), 3);
+        MockDeelController.stubSequentialResponses(pageOne, pageTwo);
+
+        PersonTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("person-flow", "person-partial-page");
+
+        // Baseline aggregates both pages without emitting.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+        assertThat(MockDeelController.requestedOffsets, is(List.of(0, 2)));
+
+        // A new person arriving on the second page must still be detected.
+        MockDeelController.requestedOffsets.clear();
+        String pageTwoWithNew = String.join(",",
+            person("p3", "active", "2024-07-01T00:00:00Z"),
+            """
+            {
+                "id": "p4",
+                "first_name": "New",
+                "last_name": "Hire",
+                "hiring_status": "active",
+                "created_at": "2024-08-01T00:00:00Z",
+                "updated_at": "2024-08-01T00:00:00Z"
+            }
+            """.trim());
+        MockDeelController.stubSequentialResponses(pageOne, peoplePageWithTotal(pageTwoWithNew, 4));
+
+        Optional<Execution> execution = trigger.evaluate(conditionContext(runContext), context);
+        assertThat(execution.isPresent(), is(true));
+        assertThat(((Map<String, Object>) variablesOf(execution.get()).get("person")).get("id"), is("p4"));
+        assertThat(MockDeelController.requestedOffsets, is(List.of(0, 2)));
     }
 }

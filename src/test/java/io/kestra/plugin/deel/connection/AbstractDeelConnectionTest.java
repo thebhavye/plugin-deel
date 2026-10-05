@@ -62,6 +62,13 @@ class AbstractDeelConnectionTest extends AbstractDeelTest {
     }
 
     @Test
+    void testNotFoundMapping() {
+        MockDeelController.stubError(404, "Not Found");
+        Exception e = assertThrows(Exception.class, () -> connectionTask().run(runContext()));
+        assertThat(e.getMessage(), containsString("Not found (404)"));
+    }
+
+    @Test
     void testServerErrorMapping() {
         MockDeelController.stubError(500, "Internal Server Error");
         Exception e = assertThrows(Exception.class, () -> connectionTask().run(runContext()));
