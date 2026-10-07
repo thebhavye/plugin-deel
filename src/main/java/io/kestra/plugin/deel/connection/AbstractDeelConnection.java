@@ -69,13 +69,13 @@ public abstract class AbstractDeelConnection extends Task {
     private Property<String> apiVersion = Property.ofValue(DEFAULT_API_VERSION);
 
     protected HttpClient createClient(RunContext runContext) throws Exception {
-        String renderedBaseUrl = runContext.render(this.baseUrl).as(String.class).orElse(DEFAULT_BASE_URL);
-        String renderedToken = runContext.render(this.apiToken).as(String.class).orElseThrow();
-        String renderedApiVersion = runContext.render(this.apiVersion).as(String.class).orElse(DEFAULT_API_VERSION);
+        String rBaseUrl = runContext.render(this.baseUrl).as(String.class).orElse(DEFAULT_BASE_URL);
+        String rToken = runContext.render(this.apiToken).as(String.class).orElseThrow(() -> new IllegalArgumentException("apiToken is required"));
+        String rApiVersion = runContext.render(this.apiVersion).as(String.class).orElse(DEFAULT_API_VERSION);
 
         HttpConfiguration httpConfiguration = HttpConfiguration.builder()
             .auth(BearerAuthConfiguration.builder()
-                .token(Property.ofValue(renderedToken))
+                .token(Property.ofValue(rToken))
                 .build())
             .build();
 
@@ -123,14 +123,14 @@ public abstract class AbstractDeelConnection extends Task {
     @SuppressWarnings("unchecked")
     protected <T> T request(RunContext runContext, String path, String method, Map<String, Object> queryParams, TypeReference<T> typeRef) throws Exception {
         try (HttpClient client = createClient(runContext)) {
-            String renderedBaseUrl = runContext.render(this.baseUrl).as(String.class).orElse(DEFAULT_BASE_URL);
-            String renderedApiVersion = runContext.render(this.apiVersion).as(String.class).orElse(DEFAULT_API_VERSION);
-            URI uri = buildUri(renderedBaseUrl, path, queryParams);
+            String rBaseUrl = runContext.render(this.baseUrl).as(String.class).orElse(DEFAULT_BASE_URL);
+            String rApiVersion = runContext.render(this.apiVersion).as(String.class).orElse(DEFAULT_API_VERSION);
+            URI uri = buildUri(rBaseUrl, path, queryParams);
 
             HttpRequest request = HttpRequest.builder()
                 .method(method)
                 .uri(uri)
-                .addHeader(API_VERSION_HEADER, renderedApiVersion)
+                .addHeader(API_VERSION_HEADER, rApiVersion)
                 .build();
 
             try {

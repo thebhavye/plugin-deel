@@ -85,12 +85,12 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        int renderedLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
-        int renderedOffset = runContext.render(this.offset).as(Integer.class).orElse(0);
+        int rLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
+        int rOffset = runContext.render(this.offset).as(Integer.class).orElse(0);
 
         Map<String, Object> params = new HashMap<>();
-        params.put("limit", renderedLimit);
-        params.put("offset", renderedOffset);
+        params.put("limit", rLimit);
+        params.put("offset", rOffset);
 
         DeelPage<DeelDeelInvoice> page = request(
             runContext,

@@ -60,18 +60,18 @@ public class PeopleGet extends AbstractDeelConnection implements RunnableTask<Pe
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        String renderedPersonId = runContext.render(this.personId).as(String.class).orElseThrow();
+        String rPersonId = runContext.render(this.personId).as(String.class).orElseThrow(() -> new IllegalArgumentException("personId is required"));
 
         DeelPerson person = request(
             runContext,
-            "/v2/people/" + renderedPersonId,
+            "/v2/people/" + rPersonId,
             "GET",
             Map.of(),
             PERSON_TYPE_REF
         );
 
         if (person == null) {
-            throw new IllegalStateException("Person not found: " + renderedPersonId);
+            throw new IllegalStateException("Person not found: " + rPersonId);
         }
 
         logger.debug("Retrieved person: {} {}", person.getFirstName(), person.getLastName());

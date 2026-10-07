@@ -75,11 +75,11 @@ public class CostCenters extends AbstractDeelConnection implements RunnableTask<
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        String renderedLegalEntityId = runContext.render(this.legalEntityId).as(String.class).orElseThrow();
+        String rLegalEntityId = runContext.render(this.legalEntityId).as(String.class).orElseThrow(() -> new IllegalArgumentException("legalEntityId is required"));
 
         DeelListResponse<DeelCostCenter> response = request(
             runContext,
-            "/legal-entities/" + renderedLegalEntityId + "/cost-centers",
+            "/legal-entities/" + rLegalEntityId + "/cost-centers",
             "GET",
             Map.of(),
             COST_CENTERS_TYPE_REF
@@ -89,7 +89,7 @@ public class CostCenters extends AbstractDeelConnection implements RunnableTask<
             ? response.getData()
             : List.of();
 
-        logger.debug("Retrieved {} cost centers for legal entity {}", costCenters.size(), renderedLegalEntityId);
+        logger.debug("Retrieved {} cost centers for legal entity {}", costCenters.size(), rLegalEntityId);
 
         FetchType resolvedFetchType = runContext.render(this.fetchType).as(FetchType.class).orElse(FetchType.FETCH);
         return handleFetch(runContext, costCenters, resolvedFetchType);

@@ -105,12 +105,12 @@ public class Get extends AbstractDeelConnection implements RunnableTask<Get.Outp
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        LookupType renderedType = runContext.render(this.lookupType).as(LookupType.class).orElseThrow();
+        LookupType rType = runContext.render(this.lookupType).as(LookupType.class).orElseThrow(() -> new IllegalArgumentException("lookupType is required"));
 
         List<Map<String, Object>> rows = new ArrayList<>();
         String nextCursor = null;
 
-        switch (renderedType) {
+        switch (rType) {
             case COUNTRIES -> rows = fetchCountries(runContext, logger);
             case CURRENCIES -> rows = fetchCurrencies(runContext, logger);
             case JOB_TITLES -> {
@@ -122,7 +122,7 @@ public class Get extends AbstractDeelConnection implements RunnableTask<Get.Outp
         }
 
         return Output.builder()
-            .lookupType(renderedType)
+            .lookupType(rType)
             .rows(rows)
             .size(rows.size())
             .nextCursor(nextCursor)

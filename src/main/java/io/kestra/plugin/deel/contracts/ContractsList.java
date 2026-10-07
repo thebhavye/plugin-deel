@@ -138,13 +138,13 @@ public class ContractsList extends AbstractDeelConnection implements RunnableTas
 
         Map<String, Object> params = buildQueryParams(runContext);
 
-        String renderedAfterCursor = runContext.render(this.afterCursor).as(String.class).orElse(null);
-        int renderedLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
+        String rAfterCursor = runContext.render(this.afterCursor).as(String.class).orElse(null);
+        int rLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
 
-        if (renderedAfterCursor != null) {
-            params.put("after_cursor", renderedAfterCursor);
+        if (rAfterCursor != null) {
+            params.put("after_cursor", rAfterCursor);
         }
-        params.put("limit", Math.min(renderedLimit, 100));
+        params.put("limit", Math.min(rLimit, 100));
 
         DeelPage<DeelContract> page = request(
             runContext,

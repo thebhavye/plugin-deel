@@ -60,18 +60,18 @@ public class ContractsGet extends AbstractDeelConnection implements RunnableTask
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        String renderedContractId = runContext.render(this.contractId).as(String.class).orElseThrow();
+        String rContractId = runContext.render(this.contractId).as(String.class).orElseThrow(() -> new IllegalArgumentException("contractId is required"));
 
         DeelContract contract = request(
             runContext,
-            "/v2/contracts/" + renderedContractId,
+            "/v2/contracts/" + rContractId,
             "GET",
             Map.of(),
             CONTRACT_TYPE_REF
         );
 
         if (contract == null) {
-            throw new IllegalStateException("Contract not found: " + renderedContractId);
+            throw new IllegalStateException("Contract not found: " + rContractId);
         }
 
         logger.debug("Retrieved contract: {}", contract.getTitle());

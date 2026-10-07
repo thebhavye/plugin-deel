@@ -78,25 +78,25 @@ public class Download extends AbstractDeelConnection implements RunnableTask<Dow
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        String renderedContractId = runContext.render(this.contractId).as(String.class).orElseThrow();
-        String renderedDocumentId = runContext.render(this.documentId).as(String.class).orElseThrow();
+        String rContractId = runContext.render(this.contractId).as(String.class).orElseThrow(() -> new IllegalArgumentException("contractId is required"));
+        String rDocumentId = runContext.render(this.documentId).as(String.class).orElseThrow(() -> new IllegalArgumentException("documentId is required"));
 
         DeelHrxDownloadResponse response = request(
             runContext,
-            "/eor/contracts/" + renderedContractId + "/hrx-documents/" + renderedDocumentId,
+            "/eor/contracts/" + rContractId + "/hrx-documents/" + rDocumentId,
             "GET",
             new java.util.HashMap<String, Object>(),
             DOWNLOAD_TYPE_REF
         );
 
         if (response == null || response.getData() == null || response.getData().getUrl() == null) {
-            throw new IllegalStateException("Download URL not found for document: " + renderedDocumentId);
+            throw new IllegalStateException("Download URL not found for document: " + rDocumentId);
         }
 
         String downloadUrl = response.getData().getUrl();
-        logger.debug("Downloading document {} for contract {}", renderedDocumentId, renderedContractId);
+        logger.debug("Downloading document {} for contract {}", rDocumentId, rContractId);
 
-        String baseName = "contract-" + renderedDocumentId.replace("-", "");
+        String baseName = "contract-" + rDocumentId.replace("-", "");
         baseName = baseName.substring(0, Math.min(baseName.length(), 16));
 
         File stagingFile = runContext.workingDir().createTempFile(".tmp").toFile();
@@ -138,8 +138,8 @@ public class Download extends AbstractDeelConnection implements RunnableTask<Dow
 
             return Output.builder()
                 .uri(uri)
-                .contractId(renderedContractId)
-                .documentId(renderedDocumentId)
+                .contractId(rContractId)
+                .documentId(rDocumentId)
                 .size(size)
                 .build();
         } catch (Exception e) {

@@ -111,11 +111,11 @@ public abstract class AbstractDeelTrigger extends AbstractTrigger {
     }
 
     protected HttpClient createClient(RunContext runContext) throws Exception {
-        String renderedToken = runContext.render(this.apiToken).as(String.class).orElseThrow();
+        String rToken = runContext.render(this.apiToken).as(String.class).orElseThrow(() -> new IllegalArgumentException("apiToken is required"));
 
         HttpConfiguration httpConfiguration = HttpConfiguration.builder()
             .auth(BearerAuthConfiguration.builder()
-                .token(Property.ofValue(renderedToken))
+                .token(Property.ofValue(rToken))
                 .build())
             .build();
 
@@ -159,14 +159,14 @@ public abstract class AbstractDeelTrigger extends AbstractTrigger {
     @SuppressWarnings("unchecked")
     protected <T> T request(RunContext runContext, String path, String method, Map<String, Object> queryParams, TypeReference<T> typeRef) throws Exception {
         try (HttpClient client = createClient(runContext)) {
-            String renderedBaseUrl = runContext.render(this.baseUrl).as(String.class).orElse(DEFAULT_BASE_URL);
-            String renderedApiVersion = runContext.render(this.apiVersion).as(String.class).orElse(DEFAULT_API_VERSION);
-            URI uri = buildUri(renderedBaseUrl, path, queryParams);
+            String rBaseUrl = runContext.render(this.baseUrl).as(String.class).orElse(DEFAULT_BASE_URL);
+            String rApiVersion = runContext.render(this.apiVersion).as(String.class).orElse(DEFAULT_API_VERSION);
+            URI uri = buildUri(rBaseUrl, path, queryParams);
 
             HttpRequest request = HttpRequest.builder()
                 .method(method)
                 .uri(uri)
-                .addHeader(API_VERSION_HEADER, renderedApiVersion)
+                .addHeader(API_VERSION_HEADER, rApiVersion)
                 .build();
 
             try {
@@ -258,8 +258,13 @@ public abstract class AbstractDeelTrigger extends AbstractTrigger {
         }
     }
 
+    /**
+     * KV key holding this trigger's state. The flow id is length-prefixed so that ids containing
+     * the "-" separator can never collide (e.g. flow "a-b" + trigger "c" vs flow "a" + trigger "b-c").
+     */
     protected String stateKey(TriggerContext context) {
-        return "deel-trigger-" + context.getFlowId() + "-" + context.getTriggerId();
+        String flowId = context.getFlowId();
+        return "deel-trigger-" + flowId.length() + "-" + flowId + "-" + context.getTriggerId();
     }
 
     protected TriggerState loadState(RunContext runContext, TriggerContext context) throws Exception {

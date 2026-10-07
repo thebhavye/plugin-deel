@@ -136,8 +136,8 @@ public class LegalEntities extends AbstractDeelConnection implements RunnableTas
 
         Map<String, Object> params = buildQueryParams(runContext);
 
-        int renderedLimit = runContext.render(this.limit).as(Integer.class).orElse(100);
-        params.put("limit", renderedLimit);
+        int rLimit = runContext.render(this.limit).as(Integer.class).orElse(100);
+        params.put("limit", rLimit);
 
         DeelPage<DeelLegalEntity> page = request(
             runContext,

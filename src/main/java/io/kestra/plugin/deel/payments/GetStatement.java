@@ -63,18 +63,18 @@ public class GetStatement extends AbstractDeelConnection implements RunnableTask
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        String renderedId = runContext.render(this.paymentStatementId).as(String.class).orElseThrow();
+        String rId = runContext.render(this.paymentStatementId).as(String.class).orElseThrow(() -> new IllegalArgumentException("paymentStatementId is required"));
 
         DeelPaymentStatementResponse response = request(
             runContext,
-            "/payments/statements/" + renderedId,
+            "/payments/statements/" + rId,
             "GET",
             Map.of(),
             STATEMENT_TYPE_REF
         );
 
         if (response == null || response.getData() == null) {
-            throw new IllegalStateException("Payment statement not found: " + renderedId);
+            throw new IllegalStateException("Payment statement not found: " + rId);
         }
 
         DeelPaymentStatement statement = response.getData();

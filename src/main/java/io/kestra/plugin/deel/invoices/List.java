@@ -139,14 +139,14 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
 
         Map<String, Object> params = buildQueryParams(runContext);
 
-        int renderedLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
-        int renderedOffset = runContext.render(this.offset).as(Integer.class).orElse(0);
-        String renderedCursor = runContext.render(this.cursor).as(String.class).orElse(null);
+        int rLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
+        int rOffset = runContext.render(this.offset).as(Integer.class).orElse(0);
+        String rCursor = runContext.render(this.cursor).as(String.class).orElse(null);
 
-        params.put("limit", renderedLimit);
-        params.put("offset", renderedOffset);
-        if (renderedCursor != null && !renderedCursor.isBlank()) {
-            params.put("cursor", renderedCursor);
+        params.put("limit", rLimit);
+        params.put("offset", rOffset);
+        if (rCursor != null && !rCursor.isBlank()) {
+            params.put("cursor", rCursor);
         }
 
         DeelPage<DeelInvoice> page = request(

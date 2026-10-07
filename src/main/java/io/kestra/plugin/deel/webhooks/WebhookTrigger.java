@@ -81,6 +81,7 @@ public class WebhookTrigger extends AbstractWebhookTrigger implements TriggerOut
             + "Used as UTF-8 bytes for HMAC-SHA256 verification, matching the official Deel examples."
     )
     @PluginProperty(group = "connection", secret = true)
+    @ToString.Exclude
     @NotNull
     // NOTE: no @NotBlank here, see AbstractDeelTrigger for why trigger beans avoid it.
     private Property<String> secretSigningKey;
@@ -100,7 +101,7 @@ public class WebhookTrigger extends AbstractWebhookTrigger implements TriggerOut
 
         String rawBody = rawBody(context);
         String signature = context.request().getHeaders().firstValue(SIGNATURE_HEADER).orElse(null);
-        String secret = runContext.render(this.secretSigningKey).as(String.class).orElseThrow();
+        String secret = runContext.render(this.secretSigningKey).as(String.class).orElseThrow(() -> new IllegalArgumentException("secretSigningKey is required"));
 
         if (signature == null || signature.isBlank()) {
             logger.warn("Rejecting Deel webhook without {} header", SIGNATURE_HEADER);

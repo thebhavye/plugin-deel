@@ -90,12 +90,12 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        String renderedContractId = runContext.render(this.contractId).as(String.class).orElseThrow();
+        String rContractId = runContext.render(this.contractId).as(String.class).orElseThrow(() -> new IllegalArgumentException("contractId is required"));
         Map<String, Object> params = buildQueryParams(runContext);
 
         DeelHrxDocumentPage page = request(
             runContext,
-            "/eor/contracts/" + renderedContractId + "/hrx-documents",
+            "/eor/contracts/" + rContractId + "/hrx-documents",
             "GET",
             params,
             DOCUMENTS_PAGE_TYPE_REF
@@ -104,7 +104,7 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
         java.util.List<DeelHrxDocument> documents = page != null && page.getData() != null ? page.getData() : new ArrayList<>();
         long total = page != null && page.getTotalCount() != null ? page.getTotalCount().longValue() : documents.size();
 
-        logger.debug("Retrieved {} documents for contract {} (total: {})", documents.size(), renderedContractId, total);
+        logger.debug("Retrieved {} documents for contract {} (total: {})", documents.size(), rContractId, total);
 
         FetchType resolvedFetchType = runContext.render(this.fetchType).as(FetchType.class).orElse(FetchType.FETCH);
         return handleFetch(runContext, documents, total, resolvedFetchType);

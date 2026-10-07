@@ -102,7 +102,7 @@ public class TimeOffTrigger extends AbstractDeelTrigger implements PollingTrigge
         boolean baseline = state.getWatermark() == null && state.getStatuses().isEmpty()
             && state.getSeen().isEmpty() && state.getPending().isEmpty();
 
-        String renderedProfileId = runContext.render(this.hrisProfileId).as(String.class).orElseThrow();
+        String rProfileId = runContext.render(this.hrisProfileId).as(String.class).orElseThrow(() -> new IllegalArgumentException("hrisProfileId is required"));
         List<TimeOffEvent> enabledEvents = runContext.render(this.events).asList(TimeOffEvent.class);
 
         List<DeelTimeOff> allTimeOffs = new ArrayList<>();
@@ -122,7 +122,7 @@ public class TimeOffTrigger extends AbstractDeelTrigger implements PollingTrigge
 
             DeelTimeOffPage page = request(
                 runContext,
-                "/time_offs/profile/" + renderedProfileId,
+                "/time_offs/profile/" + rProfileId,
                 "GET",
                 params,
                 TIME_OFF_PAGE_TYPE_REF

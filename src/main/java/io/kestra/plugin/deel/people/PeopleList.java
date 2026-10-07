@@ -142,11 +142,11 @@ public class PeopleList extends AbstractDeelConnection implements RunnableTask<P
 
         Map<String, Object> params = buildQueryParams(runContext);
 
-        int renderedLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
-        int renderedOffset = runContext.render(this.offset).as(Integer.class).orElse(0);
+        int rLimit = runContext.render(this.limit).as(Integer.class).orElse(25);
+        int rOffset = runContext.render(this.offset).as(Integer.class).orElse(0);
 
-        params.put("limit", Math.min(renderedLimit, 100));
-        params.put("offset", renderedOffset);
+        params.put("limit", Math.min(rLimit, 100));
+        params.put("offset", rOffset);
 
         DeelPage<DeelPerson> page = request(
             runContext,

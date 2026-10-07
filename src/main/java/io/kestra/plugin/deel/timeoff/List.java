@@ -129,12 +129,12 @@ public class List extends AbstractDeelConnection implements RunnableTask<List.Ou
     public Output run(RunContext runContext) throws Exception {
         Logger logger = runContext.logger();
 
-        String renderedProfileId = runContext.render(this.hrisProfileId).as(String.class).orElseThrow();
+        String rProfileId = runContext.render(this.hrisProfileId).as(String.class).orElseThrow(() -> new IllegalArgumentException("hrisProfileId is required"));
         Map<String, Object> params = buildQueryParams(runContext);
 
         DeelTimeOffPage page = request(
             runContext,
-            "/time_offs/profile/" + renderedProfileId,
+            "/time_offs/profile/" + rProfileId,
             "GET",
             params,
             TIME_OFF_PAGE_TYPE_REF
