@@ -138,7 +138,7 @@ public class ContractTrigger extends AbstractDeelTrigger implements PollingTrigg
             allContracts.addAll(page.getData());
 
             String nextCursor = page.getPage() != null ? page.getPage().getCursor() : null;
-            if (nextCursor == null || nextCursor.isBlank()) {
+            if (nextCursor == null || nextCursor.isBlank() || nextCursor.equals(afterCursor)) {
                 hasMore = false;
             } else {
                 afterCursor = nextCursor;

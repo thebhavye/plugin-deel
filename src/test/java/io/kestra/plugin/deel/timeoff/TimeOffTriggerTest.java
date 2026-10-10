@@ -203,4 +203,73 @@ class TimeOffTriggerTest extends AbstractDeelTriggerTest {
             () -> trigger.evaluate(conditionContext(runContext(trigger)), triggerContext("timeoff-flow", "timeoff-403")));
         assertThat(e.getMessage(), containsString("403"));
     }
+
+    @Test
+    void testNullPageTerminatesLoopSafely() throws Exception {
+        MockDeelController.stubResponse("null");
+
+        TimeOffTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("timeoff-flow", "timeoff-null-page");
+
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
+
+    @Test
+    @org.junit.jupiter.api.Timeout(60)
+    void testEmptyPageTerminatesLoopSafely() throws Exception {
+        // The API reports more records than it returns; the empty page
+        // must terminate pagination instead of looping indefinitely.
+        String partialPage = """
+            {
+                "data": [%s],
+                "page_size": 100,
+                "has_next_page": true,
+                "count": 1,
+                "next": "cursor-page-2"
+            }
+            """.formatted(timeOff("t1", "REQUESTED", "2024-06-01T00:00:00Z"));
+        String emptyPage = """
+            {
+                "data": [],
+                "page_size": 100,
+                "has_next_page": false,
+                "count": 0,
+                "next": null
+            }
+            """;
+        MockDeelController.stubSequentialResponses(partialPage, emptyPage);
+
+        TimeOffTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("timeoff-flow", "timeoff-empty-page");
+
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
+
+    @Test
+    void testRepeatedCursorTerminatesLoopSafely() throws Exception {
+        // Regression test: if the API returns the same next cursor repeatedly,
+        // pagination must terminate instead of looping indefinitely.
+        String pageWithRepeatedCursor = """
+            {
+                "data": [%s],
+                "page_size": 100,
+                "has_next_page": true,
+                "count": 1,
+                "next": "stuck-cursor"
+            }
+            """.formatted(timeOff("t1", "REQUESTED", "2024-06-01T00:00:00Z"));
+        MockDeelController.stubSequentialResponses(pageWithRepeatedCursor, pageWithRepeatedCursor);
+
+        TimeOffTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("timeoff-flow", "timeoff-repeated-cursor");
+
+        // Baseline consumes the page without emitting.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+
+        // Second poll with same cursor must not hang and must not emit duplicates.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
 }

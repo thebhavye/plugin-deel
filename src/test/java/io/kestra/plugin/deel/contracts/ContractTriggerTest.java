@@ -285,4 +285,27 @@ class ContractTriggerTest extends AbstractDeelTriggerTest {
         assertThat(execution.isPresent(), is(true));
         assertThat(((Map<String, Object>) variablesOf(execution.get()).get("contract")).get("id"), is("c3"));
     }
+
+    @Test
+    void testRepeatedCursorTerminatesLoopSafely() throws Exception {
+        // Regression test: if the API returns the same cursor repeatedly,
+        // pagination must terminate instead of looping indefinitely.
+        String pageWithRepeatedCursor = """
+            {
+                "data": [%s],
+                "page": {"cursor": "stuck-cursor", "total_rows": 1}
+            }
+            """.formatted(contract("c1", "new", "2024-06-01T00:00:00Z"));
+        MockDeelController.stubSequentialResponses(pageWithRepeatedCursor, pageWithRepeatedCursor);
+
+        ContractTrigger trigger = buildTrigger();
+        RunContext runContext = runContext(trigger);
+        TriggerContext context = triggerContext("contract-flow", "contract-repeated-cursor");
+
+        // Baseline consumes the page without emitting.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+
+        // Second poll with same cursor must not hang and must not emit duplicates.
+        assertThat(trigger.evaluate(conditionContext(runContext), context).isPresent(), is(false));
+    }
 }

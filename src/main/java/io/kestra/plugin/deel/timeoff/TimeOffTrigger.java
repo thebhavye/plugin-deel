@@ -127,11 +127,22 @@ public class TimeOffTrigger extends AbstractDeelTrigger implements PollingTrigge
                 params,
                 TIME_OFF_PAGE_TYPE_REF
             );
-            List<DeelTimeOff> pageData = page != null && page.getData() != null ? page.getData() : new ArrayList<>();
+            if (page == null) {
+                break;
+            }
+            List<DeelTimeOff> pageData = page.getData() != null ? page.getData() : new ArrayList<>();
+            if (pageData.isEmpty()) {
+                break;
+            }
             allTimeOffs.addAll(pageData);
 
-            hasMore = page.getHasNextPage() != null && page.getHasNextPage();
-            cursor = page.getNext();
+            String nextCursor = page.getNext();
+            if (nextCursor == null || nextCursor.isBlank() || nextCursor.equals(cursor)) {
+                hasMore = false;
+            } else {
+                cursor = nextCursor;
+                hasMore = page.getHasNextPage() != null && page.getHasNextPage();
+            }
             offset += pageData.size();
         }
 
